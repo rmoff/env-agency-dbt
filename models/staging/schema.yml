@@ -1,0 +1,36 @@
+version: 2
+
+models:
+  - name: stg_stations
+    description: >
+      Raw monitoring station data from the [Environment Agency real-time flood monitoring API](https://environment.data.gov.uk/flood-monitoring/doc/reference#introduction).
+
+
+      One row per station. Columns retain original JSON types.
+
+
+      🔗 [API docs](https://environment.data.gov.uk/flood-monitoring/doc/reference#stations)
+
+  - name: stg_measures
+    description: >
+      Raw measure data from the [Environment Agency real-time flood monitoring API](https://environment.data.gov.uk/flood-monitoring/doc/reference#introduction).
+
+
+      Each measure represents a specific type of reading (e.g. river level, rainfall)
+      at a specific station. URL prefixes on foreign keys are stripped at this layer.
+
+
+      🔗 [API docs](https://environment.data.gov.uk/flood-monitoring/doc/reference#measures)
+
+  - name: stg_readings
+    description: >
+      Raw readings from the [Environment Agency real-time flood monitoring API](https://environment.data.gov.uk/flood-monitoring/doc/reference#introduction) (`?latest` endpoint).
+
+
+      Each row is a single measurement value at a point in time.
+
+
+      NOTE: This is a snapshot -- only the most recent readings are returned by the API.
+      URL prefixes on foreign keys are stripped at this layer.
+
+      🔗 [API docs](https://environment.data.gov.uk/flood-monitoring/doc/reference#readings)

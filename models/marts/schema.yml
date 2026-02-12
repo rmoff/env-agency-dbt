@@ -1,0 +1,96 @@
+version: 2
+
+models:
+  - name: fct_readings
+    description: >
+      Incrementally loaded fact table of [environment agency readings](https://environment.data.gov.uk/flood-monitoring/doc/reference#introduction) (river levels, rainfall, etc.).
+      One row per reading per measure. New readings are appended on each dbt run from the
+      API's `?latest` endpoint. This is the only persistent store of readings history --
+      the staging layer is a snapshot that gets overwritten each run.
+
+      🔗 [API docs](https://environment.data.gov.uk/flood-monitoring/doc/reference#readings)
+    columns:
+      - name: dateTime
+        tests:
+          - not_null
+      - name: measure
+        description: FK to dim_measures.notation.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_measures')
+                field: notation
+      - name: value
+        description: >
+          Units vary by measure -- see dim_measures.unitName.
+          When the API returns multiple values as a JSON array, the first value is used.
+
+  - name: dim_measures
+    description: >
+      Dimension table of measures. Each measure represents a specific type of reading
+      at a specific station (e.g. "river level at station X, sampled every 15 minutes").
+      Full rebuild each run.
+      🔗 [API docs](https://environment.data.gov.uk/flood-monitoring/doc/reference#measures)
+    columns:
+      - name: notation
+        tests:
+          - not_null
+          - unique
+      - name: station
+        description: >
+          FK to dim_stations.notation.
+          ~2% of values reference stations not present in dim_stations (likely decommissioned).
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_stations')
+                field: notation
+              config:
+                severity: warn
+                error_after:
+                  percent: 5
+
+  - name: dim_stations
+    description: >
+      Dimension table of monitoring stations across England. Each station has one or
+      more measures. Full rebuild each run.
+      🔗 [API docs](https://environment.data.gov.uk/flood-monitoring/doc/reference#stations)
+    columns:
+      - name: notation
+        tests:
+          - not_null
+          - unique
+      - name: dateOpened
+        description: >
+          API sometimes returns multiple dates as a JSON array; we take
+          the first value.
+      - name: latitude
+        description: Renamed from 'lat' in source API.
+      - name: longitude
+        description: Renamed from 'long' in source API (reserved word in SQL).
+      - name: stationReference
+        description: >
+          Not the FK used by measures -- measures reference stations
+          via notation, not stationReference.
+      - name: status
+        description: >
+          Currently stored as full URL (e.g. ".../statusActive") -- not
+          yet stripped. One station has an array of two status values.
+
+  - name: obt_readings
+    description: >
+      Denormalized "one big table" joining readings with their measure and station
+      details. Rebuilt fully each run to reflect current dimension values.
+      One row per reading.
+
+  - name: agg_daily_readings
+    description: >
+      Daily aggregation of readings per measure. Includes min, max, and median values
+      plus reading count. Incrementally loaded using merge strategy -- the latest day
+      is always reprocessed to handle late-arriving data.
+      One row per day per measure.
+    columns:
+      - name: reading_date
+        description: Truncated from fct_readings.dateTime.
