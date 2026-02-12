@@ -97,11 +97,14 @@ models/
     stg_measures.sql
     stg_readings.sql
   marts/              -- transformed business-ready models
-    dim_measures.sql    -- table
-    dim_stations.sql    -- table
+    dim_measures.sql    -- table, reads from snap_measures (current records only)
+    dim_stations.sql    -- table, reads from snap_stations (current records only)
     fct_readings.sql    -- incremental, unique_key=['dateTime', 'measure']
     obt_readings.sql    -- table, denormalized join of readings + measures + stations
     agg_daily_readings.sql -- incremental (merge), daily min/max/median per measure
+snapshots/
+  snap_stations.sql   -- SCD2 snapshot of stg_stations (check strategy, all columns)
+  snap_measures.sql   -- SCD2 snapshot of stg_measures (check strategy, all columns)
 ```
 
 Materialization defaults are set in `dbt_project.yml` (both staging and marts = table). Per-model overrides use `{{ config() }}` blocks when needed.
@@ -113,7 +116,7 @@ Materialization defaults are set in `dbt_project.yml` (both staging and marts = 
 
 ## Current Progress
 
-Phase 1 in progress:
+Phase 1 complete:
 - [x] Staging models: stg_stations, stg_measures, stg_readings (all working)
 - [x] Dimension models: dim_measures, dim_stations (working, with type casting)
 - [x] Fact model: fct_readings (incremental)
@@ -121,6 +124,11 @@ Phase 1 in progress:
 - [x] Daily summary: agg_daily_readings (incremental with merge, from obt_readings)
 - [x] dbt tests (PK unique/not_null, FK relationships with warn/error thresholds)
 - [x] Schema definitions (staging and marts schema.yml with consumer-facing descriptions)
+
+Phase 2 complete:
+- [x] Snapshots: snap_stations, snap_measures (SCD2, check strategy on all columns)
+- [x] Dimensions rewired to read from snapshots with `WHERE dbt_valid_to IS NULL`
+- [x] Verified SCD2 behavior: changes create new versions, old versions get end-dated
 
 ## Code Style
 
