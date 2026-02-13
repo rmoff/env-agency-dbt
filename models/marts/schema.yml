@@ -99,3 +99,9 @@ models:
     description: >
       Healthcheck table, comparing last reported reading from a station to the timestamp
       at time of processing.
+    tests:
+      - max_pct_failing:
+          arguments:
+            column: freshness_status
+            failing_value: "dead (>24hr)"
+            threshold_pct: 5
