@@ -90,25 +90,28 @@ dbt run --select +dim_measures  # build a model and all its upstream dependencie
 
 ```
 macros/
-  strip_api_url.sql   -- reusable macro to strip API URL prefixes from foreign keys
-  load_raw_data.sql   -- run-operation macro to load raw tables from API (simulates ingestion)
+  strip_api_url.sql       -- reusable macro to strip API URL prefixes from foreign keys
+  load_raw_data.sql       -- run-operation macro to load raw tables from API (simulates ingestion)
+  test_max_pct_failing.sql -- custom generic test for threshold-based aggregate checks
 models/
-  staging/            -- raw data from API, materialized as tables
+  staging/                -- raw data from API, materialized as tables
     stg_stations.sql
     stg_measures.sql
     stg_readings.sql
-    sources.yml       -- declares raw tables as dbt sources
-  marts/              -- transformed business-ready models
-    dim_measures.sql    -- table, reads from snap_measures (current records only)
-    dim_stations.sql    -- table, reads from snap_stations (current records only)
-    dim_date.sql        -- table, calendar dimension (2020-2030)
-    fct_readings.sql    -- incremental, unique_key=['dateTime', 'measure']
-    obt_readings.sql    -- table, denormalized join of readings + measures + stations
-    agg_daily_readings.sql -- incremental (merge), daily min/max/median per measure
+    sources.yml           -- declares raw tables as dbt sources (with freshness config)
+  marts/                  -- transformed business-ready models
+    dim_measures.sql        -- table, reads from snap_measures (current records only)
+    dim_stations.sql        -- table, reads from snap_stations (current records only)
+    dim_date.sql            -- table, calendar dimension (2020-2030)
+    fct_readings.sql        -- incremental, unique_key=['dateTime', 'measure']
+    obt_readings.sql        -- table, denormalized join of readings + measures + stations
+    agg_daily_readings.sql  -- incremental (merge), daily min/max/median per measure
+    station_freshness.sql   -- table, per-station freshness monitoring
+    schema.yml              -- model docs, tests, and custom test configs
 snapshots/
-  snap_stations.sql   -- SCD2 snapshot of stg_stations (check strategy, all columns)
-  snap_measures.sql   -- SCD2 snapshot of stg_measures (check strategy, all columns)
-packages.yml          -- dbt package dependencies (dbt-utils)
+  snap_stations.sql       -- SCD2 snapshot of stg_stations (check strategy, all columns)
+  snap_measures.sql       -- SCD2 snapshot of stg_measures (check strategy, all columns)
+packages.yml              -- dbt package dependencies (dbt-utils)
 ```
 
 Materialization defaults are set in `dbt_project.yml` (both staging and marts = table). Per-model overrides use `{{ config() }}` blocks when needed.
