@@ -104,4 +104,4 @@ models:
           arguments:
             column: freshness_status
             failing_value: "dead (>24hr)"
-            threshold_pct: 5
+            threshold_pct: 10

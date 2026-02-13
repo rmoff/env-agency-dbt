@@ -134,18 +134,20 @@ Phase 2 complete:
 - [x] Dimensions rewired to read from snapshots with `WHERE dbt_valid_to IS NULL`
 - [x] Verified SCD2 behavior: changes create new versions, old versions get end-dated
 
-Phase 3 (dim_date, sources, packages) in progress:
+Phase 3 complete:
 - [x] dim_date: calendar dimension built with DuckDB range() function (2020-2030)
-- [x] Packages: dbt-utils installed, learned date_spine macro
+- [x] Packages: dbt-utils installed, learned date_spine macro and how to wrap CTE-generating macros
 - [x] Sources: raw tables (raw_stations, raw_measures, raw_readings) loaded via `dbt run-operation load_raw_data`
 - [x] Sources defined in sources.yml, staging models now use `{{ source() }}` instead of direct URLs
-- [ ] Source freshness: need to add loaded_at timestamp and configure freshness checks
+- [x] Source freshness: configured with `_latest_reading_at` column, different thresholds per source type
+- [x] Station freshness monitoring: station_freshness model tracks per-station staleness
+- [x] Custom generic test: `max_pct_failing` macro for threshold-based aggregate tests (config in YAML, logic in macro)
+- [x] Test patterns: singular vs generic tests, `--store-failures`, meaningful failure output
 
 Remaining topics on the learning roadmap:
-- Source freshness (in progress)
-- Unit tests
-- Contracts
-- Orchestration
+- Unit tests (testing model logic with mock inputs)
+- Contracts (enforcing column types and constraints)
+- Orchestration (scheduling dbt runs)
 - Backfill (historical CSV data)
 
 ## Code Style
