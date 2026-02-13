@@ -94,3 +94,8 @@ models:
     columns:
       - name: reading_date
         description: Truncated from fct_readings.dateTime.
+
+  - name: station_freshness
+    description: >
+      Healthcheck table, comparing last reported reading from a station to the timestamp
+      at time of processing.
