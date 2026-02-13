@@ -43,7 +43,7 @@ SELECT dateTime::DATE AS reading_date,
 FROM {{ ref('obt_readings') }}
 
 {% if is_incremental() %}
-    WHERE date >= (SELECT MAX(date) FROM {{ this }})
+    WHERE reading_date >= (SELECT MAX(reading_date) FROM {{ this }})
 {% endif %}
 
 GROUP BY reading_date, measure
