@@ -112,6 +112,8 @@ snapshots/
   snap_stations.sql       -- SCD2 snapshot of stg_stations (check strategy, all columns)
   snap_measures.sql       -- SCD2 snapshot of stg_measures (check strategy, all columns)
 packages.yml              -- dbt package dependencies (dbt-utils)
+orchestration/
+  definitions.py          -- Dagster orchestration (assets, schedules, jobs)
 ```
 
 Materialization defaults are set in `dbt_project.yml` (both staging and marts = table). Per-model overrides use `{{ config() }}` blocks when needed.
@@ -147,11 +149,21 @@ Phase 3 complete:
 - [x] Custom generic test: `max_pct_failing` macro for threshold-based aggregate tests (config in YAML, logic in macro)
 - [x] Test patterns: singular vs generic tests, `--store-failures`, meaningful failure output
 
+Phase 4 complete:
+- [x] Unit tests: tested fct_readings value extraction logic with mock inputs, learned `overrides.macros.is_incremental` for incremental models
+- [x] Mockable timestamps: `current_ts` macro for testing time-dependent logic (station_freshness)
+- [x] Contracts: enforced schema on dim_stations (column names, types, constraints), learned contracts vs tests trade-offs
+- [x] Split YAML: one .yml file per model for cleaner git history
+
+Phase 5 complete:
+- [x] Orchestration: Dagster with dagster-dbt integration
+- [x] Asset-based model: dbt models appear as Dagster assets with lineage
+- [x] Raw data ingestion: runs via subprocess before dbt build (DuckDB single-writer workaround)
+- [x] Schedule: 15-minute refresh configured and running
+- [x] Local UI: http://localhost:3000 for visibility, manual triggers, logs
+
 Remaining topics on the learning roadmap:
-- Unit tests (testing model logic with mock inputs)
-- Contracts (enforcing column types and constraints)
-- Orchestration (scheduling dbt runs)
-- Backfill (historical CSV data)
+- Backfill (historical CSV data from archive)
 
 ## Code Style
 
