@@ -1,0 +1,84 @@
+unit_tests:
+  - name: test_fct_readings_value_extraction
+    description: Verify array values extract first element, scalars pass through
+    model: fct_readings
+    overrides:
+      macros:
+        is_incremental: false
+    given:
+      - input: ref('stg_readings')
+        rows:
+          - {
+              dateTime: "2025-01-01 00:00:00",
+              measure: "scalar-test",
+              value: "3.5",
+            }
+          - {
+              dateTime: "2025-01-01 00:00:01",
+              measure: "array-test",
+              value: "[1.5, 2.0]",
+            }
+          - {
+              dateTime: "2025-01-01 00:00:02",
+              measure: "negative-array",
+              value: "[-52.984, 1.016]",
+            }
+    expect:
+      rows:
+        - {
+            dateTime: "2025-01-01 00:00:00",
+            measure: "scalar-test",
+            value: 3.5,
+          }
+        - { dateTime: "2025-01-01 00:00:01", measure: "array-test", value: 1.5 }
+        - {
+            dateTime: "2025-01-01 00:00:02",
+            measure: "negative-array",
+            value: -52.984,
+          }
+  - name: test_station_freshness_case
+    description: Verify CASE statement on station_freshness
+    model: station_freshness
+    overrides:
+      macros:
+        current_ts: "TIMESTAMP '2025-01-01 12:00:00'"
+    given:
+      - input: ref('dim_stations')
+        rows:
+          - { notation: "STN-FRESH", label: "Fresh Station" }
+          - { notation: "STN-STALE", label: "Stale Station" }
+          - { notation: "STN-DEAD", label: "Dead Station" }
+          - { notation: "STN-NONE", label: "No Readings" }
+      - input: ref('dim_measures')
+        rows:
+          - { notation: "M-FRESH", station: "STN-FRESH" }
+          - { notation: "M-STALE", station: "STN-STALE" }
+          - { notation: "M-DEAD", station: "STN-DEAD" }
+      - input: ref('fct_readings')
+        rows:
+          - { dateTime: "2025-01-01 11:30:00", measure: "M-FRESH", value: 1.0 } # 30 min ago = fresh
+          - { dateTime: "2025-01-01 00:00:00", measure: "M-STALE", value: 1.0 } # 12 hrs ago = stale
+          - { dateTime: "2024-12-30 00:00:00", measure: "M-DEAD", value: 1.0 } # 2+ days ago = dead
+          # STN-NONE has no readings
+    expect:
+      rows:
+        - {
+            notation: "STN-FRESH",
+            label: "Fresh Station",
+            freshness_status: "fresh (<1hr)",
+          }
+        - {
+            notation: "STN-STALE",
+            label: "Stale Station",
+            freshness_status: "stale (<24hr)",
+          }
+        - {
+            notation: "STN-DEAD",
+            label: "Dead Station",
+            freshness_status: "dead (>24hr)",
+          }
+        - {
+            notation: "STN-NONE",
+            label: "No Readings",
+            freshness_status: "dead (>24hr)",
+          }
