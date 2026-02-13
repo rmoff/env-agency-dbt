@@ -1,0 +1,22 @@
+version: 2
+
+sources:
+  - name: env_agency
+    schema: main
+    description: Raw data from the [Environment Agency flood monitoring API](https://environment.data.gov.uk/flood-monitoring/doc/reference)
+    tables:
+      - name: raw_stations
+        loaded_at_field: _latest_reading_at
+        freshness:
+          warn_after: { count: 24, period: hour }
+          error_after: { count: 48, period: hour }
+      - name: raw_measures
+        loaded_at_field: _latest_reading_at
+        freshness:
+          warn_after: { count: 24, period: hour }
+          error_after: { count: 48, period: hour }
+      - name: raw_readings
+        loaded_at_field: _latest_reading_at
+        freshness:
+          warn_after: { count: 1, period: hour }
+          error_after: { count: 6, period: hour }

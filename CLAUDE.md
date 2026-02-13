@@ -91,20 +91,24 @@ dbt run --select +dim_measures  # build a model and all its upstream dependencie
 ```
 macros/
   strip_api_url.sql   -- reusable macro to strip API URL prefixes from foreign keys
+  load_raw_data.sql   -- run-operation macro to load raw tables from API (simulates ingestion)
 models/
   staging/            -- raw data from API, materialized as tables
     stg_stations.sql
     stg_measures.sql
     stg_readings.sql
+    sources.yml       -- declares raw tables as dbt sources
   marts/              -- transformed business-ready models
     dim_measures.sql    -- table, reads from snap_measures (current records only)
     dim_stations.sql    -- table, reads from snap_stations (current records only)
+    dim_date.sql        -- table, calendar dimension (2020-2030)
     fct_readings.sql    -- incremental, unique_key=['dateTime', 'measure']
     obt_readings.sql    -- table, denormalized join of readings + measures + stations
     agg_daily_readings.sql -- incremental (merge), daily min/max/median per measure
 snapshots/
   snap_stations.sql   -- SCD2 snapshot of stg_stations (check strategy, all columns)
   snap_measures.sql   -- SCD2 snapshot of stg_measures (check strategy, all columns)
+packages.yml          -- dbt package dependencies (dbt-utils)
 ```
 
 Materialization defaults are set in `dbt_project.yml` (both staging and marts = table). Per-model overrides use `{{ config() }}` blocks when needed.
@@ -130,6 +134,20 @@ Phase 2 complete:
 - [x] Dimensions rewired to read from snapshots with `WHERE dbt_valid_to IS NULL`
 - [x] Verified SCD2 behavior: changes create new versions, old versions get end-dated
 
+Phase 3 (dim_date, sources, packages) in progress:
+- [x] dim_date: calendar dimension built with DuckDB range() function (2020-2030)
+- [x] Packages: dbt-utils installed, learned date_spine macro
+- [x] Sources: raw tables (raw_stations, raw_measures, raw_readings) loaded via `dbt run-operation load_raw_data`
+- [x] Sources defined in sources.yml, staging models now use `{{ source() }}` instead of direct URLs
+- [ ] Source freshness: need to add loaded_at timestamp and configure freshness checks
+
+Remaining topics on the learning roadmap:
+- Source freshness (in progress)
+- Unit tests
+- Contracts
+- Orchestration
+- Backfill (historical CSV data)
+
 ## Code Style
 
 - SQL keywords in UPPERCASE (SELECT, FROM, WHERE, etc.)
@@ -144,3 +162,4 @@ Phase 2 complete:
 - Don't box-tick. When teaching a concept (e.g. documentation, tests), explain the *purpose and audience* first, not just the syntax. Schema docs are for data consumers, not developers -- describe what the data means in the real world, not implementation details like "cast to double".
 - Apply the same standard to your own output. If you're generating docs, tests, or config, make sure it meets the quality bar you'd teach -- don't just produce something that passes validation.
 - Never fabricate example values in documentation. Either verify from the actual data or leave it out. Made-up examples are worse than no examples.
+- **Don't skip details or rush to the next topic.** Cover each concept thoroughly before moving on. If something is "worth knowing about", teach it properly -- don't mention it and immediately dismiss it as "not essential for now."
