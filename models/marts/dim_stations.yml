@@ -1,0 +1,63 @@
+models:
+  - name: dim_stations
+    description: >
+      Dimension table of monitoring stations across England. Each station has one or
+      more measures. Full rebuild each run.
+      🔗 [API docs](https://environment.data.gov.uk/flood-monitoring/doc/reference#stations)
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: notation
+        data_type: varchar
+        tests:
+          - not_null
+          - unique
+        constraints:
+          - type: not_null
+          - type: primary_key
+      - name: dateOpened
+        description: >
+          API sometimes returns multiple dates as a JSON array; we take
+          the first value.
+        data_type: date
+      - name: latitude
+        description: Renamed from 'lat' in source API.
+        data_type: double
+      - name: longitude
+        description: Renamed from 'long' in source API (reserved word in SQL).
+        data_type: double
+      - name: stationReference
+        description: >
+          Not the FK used by measures -- measures reference stations
+          via notation, not stationReference.
+        data_type: varchar
+      - name: status
+        description: >
+          Currently stored as full URL (e.g. ".../statusActive") -- not
+          yet stripped. One station has an array of two status values.
+        data_type: varchar
+      - name: RLOIid
+        data_type: varchar
+      - name: catchmentName
+        data_type: varchar
+      - name: easting
+        data_type: integer
+      - name: label
+        data_type: varchar
+      - name: northing
+        data_type: integer
+      - name: riverName
+        data_type: varchar
+      - name: stageScale
+        data_type: varchar
+      - name: town
+        data_type: varchar
+      - name: wiskiID
+        data_type: varchar
+      - name: datumOffset
+        data_type: double
+      - name: gridReference
+        data_type: varchar
+      - name: downstageScale
+        data_type: varchar

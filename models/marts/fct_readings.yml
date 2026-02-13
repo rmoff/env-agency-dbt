@@ -1,0 +1,64 @@
+models:
+  - name: fct_readings
+    description: >
+      Incrementally loaded fact table of [environment agency readings](https://environment.data.gov.uk/flood-monitoring/doc/reference#introduction) (river levels, rainfall, etc.).
+      One row per reading per measure. New readings are appended on each dbt run from the
+      API's `?latest` endpoint. This is the only persistent store of readings history --
+      the staging layer is a snapshot that gets overwritten each run.
+
+      🔗 [API docs](https://environment.data.gov.uk/flood-monitoring/doc/reference#readings)
+    columns:
+      - name: dateTime
+        tests:
+          - not_null
+      - name: measure
+        description: FK to dim_measures.notation.
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_measures')
+                field: notation
+      - name: value
+        description: >
+          Units vary by measure -- see dim_measures.unitName.
+          When the API returns multiple values as a JSON array, the first value is used.
+
+unit_tests:
+  - name: test_fct_readings_value_extraction
+    description: Verify array values extract first element, scalars pass through
+    model: fct_readings
+    overrides:
+      macros:
+        is_incremental: false
+    given:
+      - input: ref('stg_readings')
+        rows:
+          - {
+              dateTime: "2025-01-01 00:00:00",
+              measure: "scalar-test",
+              value: "3.5",
+            }
+          - {
+              dateTime: "2025-01-01 00:00:01",
+              measure: "array-test",
+              value: "[1.5, 2.0]",
+            }
+          - {
+              dateTime: "2025-01-01 00:00:02",
+              measure: "negative-array",
+              value: "[-52.984, 1.016]",
+            }
+    expect:
+      rows:
+        - {
+            dateTime: "2025-01-01 00:00:00",
+            measure: "scalar-test",
+            value: 3.5,
+          }
+        - { dateTime: "2025-01-01 00:00:01", measure: "array-test", value: 1.5 }
+        - {
+            dateTime: "2025-01-01 00:00:02",
+            measure: "negative-array",
+            value: -52.984,
+          }

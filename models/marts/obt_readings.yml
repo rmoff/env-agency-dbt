@@ -1,0 +1,6 @@
+models:
+  - name: obt_readings
+    description: >
+      Denormalized "one big table" joining readings with their measure and station
+      details. Rebuilt fully each run to reflect current dimension values.
+      One row per reading.

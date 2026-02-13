@@ -1,0 +1,10 @@
+models:
+  - name: agg_daily_readings
+    description: >
+      Daily aggregation of readings per measure. Includes min, max, and median values
+      plus reading count. Incrementally loaded using merge strategy -- the latest day
+      is always reprocessed to handle late-arriving data.
+      One row per day per measure.
+    columns:
+      - name: reading_date
+        description: Truncated from fct_readings.dateTime.

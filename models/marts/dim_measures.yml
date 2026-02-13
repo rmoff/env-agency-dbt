@@ -1,0 +1,26 @@
+models:
+  - name: dim_measures
+    description: >
+      Dimension table of measures. Each measure represents a specific type of reading
+      at a specific station (e.g. "river level at station X, sampled every 15 minutes").
+      Full rebuild each run.
+      🔗 [API docs](https://environment.data.gov.uk/flood-monitoring/doc/reference#measures)
+    columns:
+      - name: notation
+        tests:
+          - not_null
+          - unique
+      - name: station
+        description: >
+          FK to dim_stations.notation.
+          ~2% of values reference stations not present in dim_stations (likely decommissioned).
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_stations')
+                field: notation
+              config:
+                severity: warn
+                error_after:
+                  percent: 5

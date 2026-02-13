@@ -1,41 +1,16 @@
+models:
+  - name: station_freshness
+    description: >
+      Healthcheck table, comparing last reported reading from a station to the timestamp
+      at time of processing.
+    tests:
+      - max_pct_failing:
+          arguments:
+            column: freshness_status
+            failing_value: "dead (>24hr)"
+            threshold_pct: 10
+
 unit_tests:
-  - name: test_fct_readings_value_extraction
-    description: Verify array values extract first element, scalars pass through
-    model: fct_readings
-    overrides:
-      macros:
-        is_incremental: false
-    given:
-      - input: ref('stg_readings')
-        rows:
-          - {
-              dateTime: "2025-01-01 00:00:00",
-              measure: "scalar-test",
-              value: "3.5",
-            }
-          - {
-              dateTime: "2025-01-01 00:00:01",
-              measure: "array-test",
-              value: "[1.5, 2.0]",
-            }
-          - {
-              dateTime: "2025-01-01 00:00:02",
-              measure: "negative-array",
-              value: "[-52.984, 1.016]",
-            }
-    expect:
-      rows:
-        - {
-            dateTime: "2025-01-01 00:00:00",
-            measure: "scalar-test",
-            value: 3.5,
-          }
-        - { dateTime: "2025-01-01 00:00:01", measure: "array-test", value: 1.5 }
-        - {
-            dateTime: "2025-01-01 00:00:02",
-            measure: "negative-array",
-            value: -52.984,
-          }
   - name: test_station_freshness_case
     description: Verify CASE statement on station_freshness
     model: station_freshness
