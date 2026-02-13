@@ -164,6 +164,7 @@ Phase 5 complete:
 
 Remaining topics on the learning roadmap:
 - Backfill (historical CSV data from archive)
+- Data visualization (lightweight dataviz on top of the stack)
 
 ## Code Style
 
