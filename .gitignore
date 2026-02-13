@@ -3,3 +3,5 @@ target/
 package-lock.yml
 dbt_packages/
 logs/
+.tmp_dagster_home*
+__pycache__/
