@@ -90,8 +90,7 @@ dbt run --select marts
 ### Scheduled runs (Dagster)
 
 ```bash
-cd orchestration
-dagster dev
+dagster dev -f orchestration/definitions.py
 ```
 
 Opens at http://localhost:3000. A 15-minute schedule is configured to refresh data.
