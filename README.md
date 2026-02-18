@@ -60,7 +60,18 @@ env_agency:
 
 ## Running the pipeline
 
+### Backfill historical data
+
+The API only returns recent readings. For historical data, use the [CSV archive](https://environment.data.gov.uk/flood-monitoring/archive):
+
+```bash
+dbt run-operation backfill_readings --args '{"start_date": "2025-02-17", "end_date": "2026-02-16"}'
+dbt build --full-refresh --select stg_readings_archive fct_readings+
+```
+
 ### Manual runs
+
+_Make sure you've run one backfill before running an API load._
 
 ```bash
 # Load fresh data from API
@@ -74,15 +85,6 @@ dbt build
 # Or just specific layers
 dbt run --select staging
 dbt run --select marts
-```
-
-### Backfill historical data
-
-The API only returns recent readings. For historical data, use the CSV archive:
-
-```bash
-dbt run-operation backfill_readings --args '{"start_date": "2024-01-01", "end_date": "2024-01-31"}'
-dbt build --full-refresh --select stg_readings_archive fct_readings+
 ```
 
 ### Scheduled runs (Dagster)
