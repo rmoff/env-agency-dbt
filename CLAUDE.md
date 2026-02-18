@@ -91,13 +91,19 @@ dbt run --select +dim_measures  # build a model and all its upstream dependencie
 ```
 macros/
   strip_api_url.sql       -- reusable macro to strip API URL prefixes from foreign keys
-  load_raw_data.sql       -- run-operation macro to load raw tables from API (simulates ingestion)
   test_max_pct_failing.sql -- custom generic test for threshold-based aggregate checks
+  current_ts.sql          -- mockable timestamp macro for testing
+  ingestion/              -- raw data loading from API
+    load_raw_readings.sql   -- required ingestion (fail on error)
+    load_raw_stations.sql   -- optional ingestion (warn and continue)
+    load_raw_measures.sql   -- optional ingestion (warn and continue)
+    backfill_readings.sql   -- manual backfill from CSV archive (date range)
 models/
   staging/                -- raw data from API, materialized as tables
     stg_stations.sql
     stg_measures.sql
-    stg_readings.sql
+    stg_readings.sql        -- from API, handles JSON array values
+    stg_readings_archive.sql -- from CSV backfill, handles pipe-delimited values
     sources.yml           -- declares raw tables as dbt sources (with freshness config)
   marts/                  -- transformed business-ready models
     dim_measures.sql        -- table, reads from snap_measures (current records only)
@@ -158,13 +164,27 @@ Phase 4 complete:
 Phase 5 complete:
 - [x] Orchestration: Dagster with dagster-dbt integration
 - [x] Asset-based model: dbt models appear as Dagster assets with lineage
-- [x] Raw data ingestion: runs via subprocess before dbt build (DuckDB single-writer workaround)
+- [x] Raw data ingestion: split into separate macros (load_raw_readings, load_raw_stations, load_raw_measures)
+- [x] Required vs optional ingestion: readings required (fail on error), dimensions optional (warn and continue with stale data)
+- [x] Ingestion as Dagster assets: raw_readings, raw_stations, raw_measures are proper assets with timing metadata
 - [x] Schedule: 15-minute refresh configured and running
 - [x] Local UI: http://localhost:3000 for visibility, manual triggers, logs
 
+Phase 6 complete:
+- [x] Backfill macro: `backfill_readings(start_date, end_date)` loads historical CSV archives
+- [x] Efficient single-statement load using DuckDB `list_transform` + `read_csv` with explicit schema
+- [x] Idempotent: deletes target date range before inserting (safe to re-run)
+- [x] Input validation: rejects invalid date ranges (start > end)
+- [x] Staging model: `stg_readings_archive` handles CSV quirks (pipe-delimited values, VARCHAR→DOUBLE)
+- [x] fct_readings updated to UNION both `stg_readings` (API) and `stg_readings_archive` (CSV)
+- [x] Canonical pattern: staging models normalize their source quirks, fact model just unions
+- [x] Unit tests updated: value extraction tests moved to stg_readings, fct_readings tests UNION behavior
+- [x] Usage: `dbt run-operation backfill_readings --args '{"start_date": "...", "end_date": "..."}'` then `dbt build --full-refresh --select stg_readings_archive fct_readings+`
+
 Remaining topics on the learning roadmap:
-- Backfill (historical CSV data from archive)
 - Data visualization (lightweight dataviz on top of the stack)
+- Deployment (package and deploy the pipeline to a server instead of laptop)
+- Separate EL from T: replace read_json() with proper ingestion layer (Meltano, Airbyte, or Python)
 
 ## Code Style
 
@@ -181,3 +201,6 @@ Remaining topics on the learning roadmap:
 - Apply the same standard to your own output. If you're generating docs, tests, or config, make sure it meets the quality bar you'd teach -- don't just produce something that passes validation.
 - Never fabricate example values in documentation. Either verify from the actual data or leave it out. Made-up examples are worse than no examples.
 - **Don't skip details or rush to the next topic.** Cover each concept thoroughly before moving on. If something is "worth knowing about", teach it properly -- don't mention it and immediately dismiss it as "not essential for now."
+- **User implements, Claude guides.** Explain concepts, provide scaffolding/skeleton code with blanks to fill in, but let the user write the actual code. Don't just steamroll through implementations.
+- **Ask before modifying.** Don't update the database, write files, or make changes without explicit permission. The user is learning by doing -- taking actions away from them defeats the purpose.
+- **Don't guide to lazy options.** Teach best practices even when shortcuts exist. "Good enough for learning" is not the goal -- learning proper patterns is the goal.

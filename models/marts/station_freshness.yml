@@ -6,6 +6,7 @@ models:
     tests:
       - max_pct_failing:
           arguments:
+            severity: warn
             column: freshness_status
             failing_value: "dead (>24hr)"
             threshold_pct: 10

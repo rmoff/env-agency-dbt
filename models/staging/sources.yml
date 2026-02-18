@@ -20,3 +20,5 @@ sources:
         freshness:
           warn_after: { count: 1, period: hour }
           error_after: { count: 6, period: hour }
+      - name: raw_readings_archive
+        description: Historical readings loaded from CSV archive via backfill macro

@@ -25,8 +25,8 @@ models:
           When the API returns multiple values as a JSON array, the first value is used.
 
 unit_tests:
-  - name: test_fct_readings_value_extraction
-    description: Verify array values extract first element, scalars pass through
+  - name: test_fct_readings_union
+    description: Verify both sources are combined correctly
     model: fct_readings
     overrides:
       macros:
@@ -36,29 +36,25 @@ unit_tests:
         rows:
           - {
               dateTime: "2025-01-01 00:00:00",
-              measure: "scalar-test",
-              value: "3.5",
+              measure: "api-reading",
+              value: 3.5,
             }
+      - input: ref('stg_readings_archive')
+        rows:
           - {
-              dateTime: "2025-01-01 00:00:01",
-              measure: "array-test",
-              value: "[1.5, 2.0]",
-            }
-          - {
-              dateTime: "2025-01-01 00:00:02",
-              measure: "negative-array",
-              value: "[-52.984, 1.016]",
+              dateTime: "2025-01-01 01:00:00",
+              measure: "archive-reading",
+              value: 7.2,
             }
     expect:
       rows:
         - {
             dateTime: "2025-01-01 00:00:00",
-            measure: "scalar-test",
+            measure: "api-reading",
             value: 3.5,
           }
-        - { dateTime: "2025-01-01 00:00:01", measure: "array-test", value: 1.5 }
         - {
-            dateTime: "2025-01-01 00:00:02",
-            measure: "negative-array",
-            value: -52.984,
+            dateTime: "2025-01-01 01:00:00",
+            measure: "archive-reading",
+            value: 7.2,
           }

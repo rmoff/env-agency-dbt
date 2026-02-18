@@ -34,3 +34,54 @@ models:
       URL prefixes on foreign keys are stripped at this layer.
 
       🔗 [API docs](https://environment.data.gov.uk/flood-monitoring/doc/reference#readings)
+
+unit_tests:
+  - name: test_stg_readings_value_extraction
+    description: Verify JSON array values extract first element, scalars pass through
+    model: stg_readings
+    given:
+      - input: source('env_agency', 'raw_readings')
+        rows:
+          - {
+              items:
+                [
+                  {
+                    dateTime: "2025-01-01 00:00:00",
+                    measure: "http://environment.data.gov.uk/flood-monitoring/id/measures/scalar-test",
+                    value: 3.5,
+                  },
+                ],
+            }
+          - {
+              items:
+                [
+                  {
+                    dateTime: "2025-01-01 00:00:01",
+                    measure: "http://environment.data.gov.uk/flood-monitoring/id/measures/array-test",
+                    value: [1.5, 2.0],
+                  },
+                ],
+            }
+          - {
+              items:
+                [
+                  {
+                    dateTime: "2025-01-01 00:00:02",
+                    measure: "http://environment.data.gov.uk/flood-monitoring/id/measures/negative-array",
+                    value: [-52.984, 1.016],
+                  },
+                ],
+            }
+    expect:
+      rows:
+        - {
+            dateTime: "2025-01-01 00:00:00",
+            measure: "scalar-test",
+            value: 3.5,
+          }
+        - { dateTime: "2025-01-01 00:00:01", measure: "array-test", value: 1.5 }
+        - {
+            dateTime: "2025-01-01 00:00:02",
+            measure: "negative-array",
+            value: -52.984,
+          }
