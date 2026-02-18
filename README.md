@@ -1,6 +1,6 @@
 # Environment Agency Flood Data Pipeline
 
-A dbt project that ingests and transforms UK Environment Agency flood monitoring data. Built as a learning exercise to understand dbt patterns with real-world messy data.
+A dbt project that ingests and transforms UK Environment Agency flood monitoring data. Built as a learning exercise [guided by Claude Code](CLAUDE.md) to understand dbt patterns with real-world messy data.
 
 This started as a blog post about [building a data pipeline with DuckDB](https://rmoff.net/2025/03/20/building-a-data-pipeline-with-duckdb/). The dbt version applies proper patterns: staging/marts separation, incremental loading, SCD2 snapshots, and actual tests.
 
