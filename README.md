@@ -6,6 +6,9 @@ This started as a blog post about [building a data pipeline with DuckDB](https:/
 I then built this as a learning exercise [guided by Claude Code](CLAUDE.md) to understand dbt patterns with real-world messy data. 
 The dbt version applies proper patterns: staging/marts separation, incremental loading, SCD2 snapshots, and actual tests.
 
+> [!TIP]
+> See accompanying blog post: [Ten years late to the dbt party (DuckDB edition)](https://rmoff.net/2026/02/19/ten-years-late-to-the-dbt-party-duckdb-edition/)
+
 ## Data Attribution
 
 > This uses Environment Agency flood and river level data from the [real-time data API](https://environment.data.gov.uk/flood-monitoring/doc/reference) (Beta)
